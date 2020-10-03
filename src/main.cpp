@@ -1,4 +1,3 @@
-#include <FS.h>
 /*
 * Common mistakes & tips:
 *   * Don't just connect the IR LED directly to the pin, it won't
@@ -15,14 +14,17 @@
 *   * ESP-01 modules are tricky. We suggest you use a module with more GPIOs
 *     for your first time. e.g. ESP-12 etc.
 */
-// #ifndef UNIT_TEST
+
 #include <Arduino.h>
-#include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
-// #endif
+
 // #include "routes.cpp"
 #include "routes.hpp"
-#include "initial_setup.hpp"
+#include "initialSetup.hpp"
+#include "server.hpp"
+#include "homebridgeConnectionSetup.hpp"
+#include "configManager.hpp"
+
 // // an IR detector/demodulator is connected to GPIO pin 2
 // uint16_t RECV_PIN = 2;
 // HTTPClient http;
@@ -38,10 +40,8 @@
 
 // //void generateStatus() {}
 // #include <WiFiManager.h>
-#include <WiFiManager.h>
-char beServerName[40];
 
-ESP8266WebServer server(80);
+//extern server(80);
 
  void handleRoot() {
    server.send(200, "text/plain", "hello from esp8266!\r\n");
@@ -62,46 +62,12 @@ ESP8266WebServer server(80);
  }
 void setup(void) {
   // runNewBoardSetup();
-  WiFiManager wifiManager;
-  // Wait 180 seconds after a WiFi connection failure before re-entering new board setup mode
-  wifiManager.setConfigPortalTimeout(180);
-
-  WiFiManagerParameter beServerNameParam("beServerName", "Backend server name", beServerName, 40);
-  wifiManager.addParameter(&beServerNameParam);
-//  wifiManager.setSaveConfigCallback(saveConfigCallback);
-  // wifiManager.setDebugOutput(false);
-//  strcpy(beServerName, beServerNameParam.getValue());
   Serial.begin(115200);
-  Serial.println(beServerName);
+  SPIFFS.begin();
+  delay(200);
+  initSSIDConnectionOrSetup();
+  server.begin();
 
-  if(!wifiManager.autoConnect("costel REMOTE EMULATOR", "iriririr")) {
-    Serial.println("failed to connect, we should reset as see if it connects");
-    delay(3000);
-    ESP.reset();
-    delay(5000);
-  }
-  // irsend.begin();
-  // irrecv.enableIRIn();  // Start the receiver
-
-   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(WiFi.status());
-    Serial.print(".");
-  }
-  Serial.print("\nConnected to ");
-  Serial.println(WiFi.SSID());
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  String mdnsHost = "remoteEmulator" + String(ESP.getChipId());
-  if (MDNS.begin(mdnsHost, WiFi.localIP())) {
-    Serial.println("MDNS responder started");
-  }
-  server.on("/", [](){
-     server.send(200, "text/plain", "this works as well");
-  });
-  server.onNotFound(handleNotFound);
 //  // server.on("/ir", HTTP_POST, handleIr);
 //  // server.on("/status", HTTP_GET, handleStatus);
 //
@@ -111,11 +77,24 @@ void setup(void) {
 //
 //  // server.onNotFound(handleNotFound);
 //
-  server.begin();
-  MDNS.addService("http", "tcp", 80);
-  MDNS.addServiceTxt("http", "tcp", "type", "esp8266RemoteEmulator");
-  MDNS.addServiceTxt("http", "tcp", "chipId", String(ESP.getChipId()));
+  // irsend.begin();
+  // irrecv.enableIRIn();  // Start the receiver
 
+   // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(WiFi.status());
+    Serial.print(".");
+  }
+
+  server.on("/register", handleRegister);
+  server.on("/unregister", handleUnRegister);
+  server.on("/reset", handleReset);
+  server.on("/deleteConfig", deleteConfigFile);
+  server.on("/", [](){
+    server.send(200, "text/plain", "this works as well");
+  });
+  server.onNotFound(handleNotFound);
 
 // void dump(decode_results *results) {
 //   // Dumps out the decode_results structure.
