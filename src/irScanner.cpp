@@ -70,7 +70,7 @@ void handleSocketIOLoop() {
     if(now - messageTimestamp > 2000) {
       messageTimestamp = now;
 
-      // creat JSON message for Socket.IO (event)
+      // create JSON message for Socket.IO (event)
       DynamicJsonDocument doc(1024);
       JsonArray array = doc.to<JsonArray>();
 

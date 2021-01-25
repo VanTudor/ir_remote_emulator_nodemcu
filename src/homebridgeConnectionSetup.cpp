@@ -55,6 +55,7 @@ void handleUnRegister() {
 //  SPIFFS.begin();
   Serial.println("De-registering...");
   deleteConfigFile();
+  delay(500);
   Serial.println("Resetting mDNS server...");
   MDNS = MDNSResponder();
   delay(500);

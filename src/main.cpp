@@ -179,5 +179,4 @@ void loop(void) {
 //  Serial.println(WiFi.localIP());
 //  Serial.println("WIFI connected: ");
 //  Serial.println(WiFi.status() == WL_CONNECTED);
-  delay(500);
 }
