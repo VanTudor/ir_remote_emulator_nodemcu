@@ -34,7 +34,6 @@
 
 // const char* ssid = "DIGI-vmG5";
 // const char* password = "poiasd03";
-// bool shouldRecordIr = false;
 
 // IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
 
@@ -68,7 +67,8 @@ void setup(void) {
   initSSIDConnectionOrSetup();
   server.begin();
 
-//  // server.on("/ir", HTTP_POST, handleIr);
+  // server.on("/ir", HTTP_POST, handleIr);
+  server.on("/status", HTTP_POST, handleUpdateStatus);
 //  // server.on("/status", HTTP_GET, handleStatus);
 //
 //  // server.on("/inline", [](){
@@ -160,6 +160,7 @@ void setup(void) {
 // }
 
 void loop(void) {
+//  deleteConfigFile();
   MDNS.update();
   //   if (shouldRecordIr) {
   //       if (irrecv.decode(&results)) {
@@ -172,6 +173,7 @@ void loop(void) {
   //       }
   // }
    server.handleClient();
+   handleSocketIOLoop();
 //  Serial.println(beServerName);
 //  Serial.println("LOCALIP: ");
 //  Serial.println(WiFi.localIP());

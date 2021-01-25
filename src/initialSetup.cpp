@@ -28,10 +28,10 @@ void initMDNS() {
   const char* mDNSTXTServiceType = "esp8266RemoteEmulator";
   const int chipId = ESP.getChipId();
   Serial.println("ARRAY SIZE: " + String(getIntAsArraySize(chipId)));
-  char* mDNSTXTChipId = (char *)malloc(getIntAsArraySize(chipId));
-  sprintf(mDNSTXTChipId, "%d", chipId);
+  char mDNSTXTChipId[16];
+  itoa(chipId, mDNSTXTChipId, 10);
+//  sprintf(mDNSTXTChipId, "%d", chipId);
   const char* mDNSTXTRegistered;
-
   Serial.println();
   Serial.println("Initiating mDNS service.");
   RuntimeConfig storedConfig{};
@@ -41,21 +41,29 @@ void initMDNS() {
     Serial.println("MDNS responder started");
   }
   loadConfig(storedConfig);
+  char storedConfigDbId[50];
+  strcpy(storedConfigDbId, storedConfig.id);
+  const char* storedConfigName = storedConfig.name;
 
   mDNSTXTRegistered = storedConfig.registered ? "true" : "false";
   Serial.println();
   Serial.println("Finished loading config. Config data:");
   Serial.println("REGISTERED: >" + String(storedConfig.registered));
   Serial.println("NAME: >" + String(storedConfig.name));
+  Serial.println(storedConfig.id);
+  Serial.println(storedConfigDbId);
+//  Serial.println("ID: >" + String(storedConfig.));
   Serial.println("Registering mDNS service...");
-  hMDNSService = MDNS.addService(nullptr, "_http", "tcp", mDNSPort);
+  hMDNSService = MDNS.addService(storedConfigName, "_http", "tcp", mDNSPort);
   if (hMDNSService) {
-    MDNS.setServiceProbeResultCallback(hMDNSService, serviceProbeResult);
+//    MDNS.setServiceProbeResultCallback(hMDNSService, serviceProbeResult);
     MDNS.addServiceTxt(hMDNSService, "type", mDNSTXTServiceType);
-    MDNS.setServiceName(storedConfig.name, "ESP8266 Remote Emulator");
-    MDNS.setServiceName(hMDNSService, storedConfig.name);
+//    MDNS.setServiceName(storedConfigName, "ESP8266 Remote Emulator");
+//    MDNS.setServiceName(hMDNSService, storedConfigName);
+    MDNS.addServiceTxt(hMDNSService, "id", storedConfigDbId);
     MDNS.addServiceTxt(hMDNSService, "chipId", mDNSTXTChipId);
     MDNS.addServiceTxt(hMDNSService, "registered", mDNSTXTRegistered);
+//    MDNS.addServiceTxt(hMDNSService, "id", storedConfig.id);
 
     Serial.println();
     Serial.println("mDNS service registered. mDNS Data: ");

@@ -7,5 +7,12 @@
     - The backend server name is the same you're using to access it on the local network. E.g. `my_remote_emulator_backend` in `http://my_remote_emulator_backend.local` 
     - #TODO: Tip: If you're setting multiple units up at the same time, you can use the `Blink LED` button to identify the board.
 
+### How to get yourself out of a mess
+0. write some bad code and flash it to your esp8266
+1. get stuck in a loop that doesn't stop even after subsequent updates
+2. `pip install esptool`
+3. `esptool.py erase_flash`
+4. repeat.
+
 ## Dependencies
 - https://github.com/tzapu/WiFiManager

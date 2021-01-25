@@ -1,3 +1,17 @@
+#include <ESP8266HTTPClient.h>
+// #include <IRrecv.h>
+// #include <IRutils.h>
+// #include <EEPROM.h>
+#include <ESP8266WiFi.h>
+//#include <ESP8266mDNS.h>
+#include "server.hpp"
+// #include <IRremoteESP8266.h>
+// #include <IRsend.h>
+// #include <WiFiClient.h>
+#ifndef IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H
+#define IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H
+#include "irScanner.hpp"
+#include "configManager.hpp"
 void handleStatus();
 
 
@@ -5,6 +19,11 @@ void handleIr();
 void handleNotFound();
 void blinkLED();
 void handleReset();
+// POST /status
+void handleUpdateStatus();
+void handleSocketIOLoop();
+
+#endif IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H
 
 // String readSerialLine();
 

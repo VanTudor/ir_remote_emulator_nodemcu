@@ -35,10 +35,15 @@ void handleRegister() {
   Serial.println("----");
   config.registered = doc["registered"].isNull() ? RuntimeConfig::defaults.registered : doc["registered"];
   config.name = doc["name"].isNull() ? RuntimeConfig::defaults.name : doc["name"];
+  config.backendServerPath = doc["backendServerPath"].isNull() ? RuntimeConfig::defaults.backendServerPath : doc["backendServerPath"]; // TODO: add error handling
+  config.backendServerPort = doc["backendServerPort"].isNull() ? RuntimeConfig::defaults.backendServerPort : doc["backendServerPort"]; // TODO: add error handling
+  config.id = doc["id"]; // TODO: add error handling
 
   Serial.println("Deserialized JSON. Values: ");
   Serial.println("Registered: " + String(config.registered));
   Serial.println("Name: " + String(config.name));
+  Serial.println("BackendServerPath: " + String(config.backendServerPath));
+  Serial.println("ID: " + String(config.id));
 
   saveConfig(config);
   Serial.println("Restarting mDNS service...");
@@ -49,15 +54,10 @@ void handleRegister() {
 void handleUnRegister() {
 //  SPIFFS.begin();
   Serial.println("De-registering...");
-  if (SPIFFS.exists(ServerConfig::filePath)) {
-    SPIFFS.remove(ServerConfig::filePath);
-    Serial.println("Removed config file...");
-  } else {
-    Serial.println("No config file stored. Continuing...");
-  }
+  deleteConfigFile();
   Serial.println("Resetting mDNS server...");
-  delay(500);
   MDNS = MDNSResponder();
+  delay(500);
   initMDNS();
 
   Serial.println("De-registration successful!");

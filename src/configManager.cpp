@@ -5,6 +5,7 @@
 
 const char* ServerConfig::filePath = "beconfig.json";
 const char* ServerConfig::apPassword = "iriririr";
+
 const RuntimeConfigDefaults RuntimeConfig::defaults;
 
 void loadConfig(RuntimeConfig &config) {
@@ -29,9 +30,25 @@ void loadConfig(RuntimeConfig &config) {
     Serial.println("Config file not found. Using default configuration.");
   }
 
+  Serial.println("loading registered");
   config.registered = doc["registered"].isNull() ? RuntimeConfig::defaults.registered : doc["registered"];
+  Serial.println("loading doc");
   config.name = doc["name"].isNull() ? RuntimeConfig::defaults.name : doc["name"];
+  Serial.println("loading backendServerPath");
+  config.backendServerPath = doc["backendServerPath"].isNull() ? RuntimeConfig::defaults.backendServerPath : doc["backendServerPath"];
+  Serial.println("loading backendServerPort");
+  long backendServerPort;
+  Serial.println("11111");
+  delay(100);
+  Serial.println(doc["backendServerPort"].as<String>());
+  char charBuff[50];
+  doc["backendServerPort"].as<String>().toCharArray(charBuff, 50);
+  backendServerPort = strtol(charBuff, nullptr, 10);
+  Serial.println("222222");
+  config.backendServerPort = doc["backendServerPort"].isNull() ? RuntimeConfig::defaults.backendServerPort : backendServerPort;
 
+  Serial.println("loading DB issued id");
+  config.id = doc["id"].isNull() ? RuntimeConfig::defaults.id : doc["id"]; // if you don't use the defaults, everything crashes later down the line when advertising the service on mdns. TODO: handle this more beautifully
 }
 
 void saveConfig(RuntimeConfig &config) {
@@ -53,8 +70,13 @@ void saveConfig(RuntimeConfig &config) {
 
   doc["registered"] = config.registered;
   doc["name"] = config.name;
-  Serial.println("name  "+ doc["name"].as<String>());
-  Serial.println("registered  "+ doc["registered"].as<String>());
+  doc["id"] = config.id;
+  Serial.println("name  " + doc["name"].as<String>());
+  Serial.println("registered  " + doc["registered"].as<String>());
+  Serial.println("backendServerPath  " + doc["backendServerPath"].as<String>());
+  Serial.println("backendServerPort  " + doc["backendServerPort"].as<String>());
+  Serial.println("id  " + doc["id"].as<String>());
+
   Serial.println("Added data to json.");
   String serializedJSON;
   serializeJson(doc, serializedJSON);
@@ -72,8 +94,13 @@ void saveConfig(RuntimeConfig &config) {
 }
 
 void deleteConfigFile() {
-  Serial.println("Removing config file.");
-  SPIFFS.remove(ServerConfig::filePath);
-  delay(500);
-  Serial.println("Config file removed.");
+  Serial.println("Removing config file...");
+  if (SPIFFS.exists(ServerConfig::filePath)) {
+    SPIFFS.remove(ServerConfig::filePath);
+    delay(500);
+    Serial.println("Removed config file.");
+  } else {
+    Serial.println("No config file stored. Continuing...");
+  }
+
 }

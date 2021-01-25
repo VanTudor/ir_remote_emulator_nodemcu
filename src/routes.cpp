@@ -1,16 +1,4 @@
-#include <ESP8266HTTPClient.h>
-// #include <IRrecv.h>
-// #include <IRutils.h>
-// #include <EEPROM.h>
-#include <ESP8266WiFi.h>
-//#include <ESP8266mDNS.h>
-#include "server.hpp"
-// #include <IRremoteESP8266.h>
-// #include <IRsend.h>
-// #include <WiFiClient.h>
-
 #include "routes.hpp"
-#include "configManager.hpp"
 
 void handleReset() {
   Serial.println("Resetting...");
@@ -21,6 +9,19 @@ void handleReset() {
   delay(1000);
   Serial.println("Successfully reset!");
   server.send(200, "text/plain", "Successfully reset!\r\n");
+}
+
+void handleUpdateStatus() {
+  RuntimeConfig storedConfig{}; // TODO: make this global
+  DynamicJsonDocument doc(2048);
+
+  deserializeJson(doc, server.arg("plain"));
+  loadConfig(storedConfig);
+  irRecordingStatusUpdateHandler(doc, &storedConfig);
+
+  // add other config handlers/modifiers here
+
+  saveConfig(storedConfig);
 }
 //void handleStatus(ESP8266WebServer server) {
 // StaticJsonDocument<200> doc;
@@ -55,50 +56,41 @@ void handleReset() {
 //              "</body>"
 //              );
 // }
-  // void handleStatus() {
-  //  StaticJsonDocument<200> doc;
-  //  String JSONResponse;
 
-  //  doc["isRecording"] = shouldRecordIr;
-
-  //  serializeJson(doc, JSONResponse);
-  //  server.send(200, "text/javascript", JSONResponse);
-  // }
-
-  // void handleIr() {
-  //   /*for (uint8_t i = 0; i < server.args(); i++) {
-  //     if (server.argName(i) == "code") {
-  //       uint32_t code = strtoul(server.arg(i).c_str(), NULL, 10);
-  //       irsend.sendNEC(code, 32);
-  //     }
-  //     if (server.argName(i) == "record") {
-
-  //       uint32_t code = strtoul(server.arg(i).c_str(), NULL, 10);
-  //       irsend.sendNEC(code, 32);
-  //     }
-  //   }*/
-  //   // Parsing
-  //   DynamicJsonDocument doc(2048);
-  //   deserializeJson(doc, server.arg("plain"));
-
-  //   const char* irCode = doc["irCode"].as<const char*>(); // "Leanne Graham"
-  //   const boolean shouldRecord = doc["shouldRecord"].as<bool>(); // "Bret"
-
-  //   shouldRecordIr = shouldRecord;
-  //   if (irCode) {
-  //       uint32_t code = strtoul(irCode, NULL, 10);
-  //       irsend.sendNEC(code, 32);
-  //   }
-  //   // Output to serial monitor
-  //   Serial.print("JSON irCode:");
-  //   Serial.println(irCode);
-  //   Serial.print("JSON shouldRecord:");
-  //   Serial.println(shouldRecord);
-  //   Serial.println("JSON shouldRecord type: ");
-  // //  Serial.println(doc["shouldRecord"].is<bool>());
-  // //  Serial.println(doc["shouldRecord"].is<const char*>());
-  //   handleRoot();
-  // }
+//   void handleIr() {
+//     /*for (uint8_t i = 0; i < server.args(); i++) {
+//       if (server.argName(i) == "code") {
+//         uint32_t code = strtoul(server.arg(i).c_str(), NULL, 10);
+//         irsend.sendNEC(code, 32);
+//       }
+//       if (server.argName(i) == "record") {
+//
+//         uint32_t code = strtoul(server.arg(i).c_str(), NULL, 10);
+//         irsend.sendNEC(code, 32);
+//       }
+//     }*/
+//     // Parsing
+//     DynamicJsonDocument doc(2048);
+//     deserializeJson(doc, server.arg("plain"));
+//
+//     const char* irCode = doc["irCode"].as<const char*>(); // "Leanne Graham"
+//     const boolean shouldRecord = doc["shouldRecord"].as<bool>(); // "Bret"
+//
+//     shouldRecordIr = shouldRecord;
+//     if (irCode) {
+//         uint32_t code = strtoul(irCode, NULL, 10);
+//         irsend.sendNEC(code, 32);
+//     }
+//     // Output to serial monitor
+//     Serial.print("JSON irCode:");
+//     Serial.println(irCode);
+//     Serial.print("JSON shouldRecord:");
+//     Serial.println(shouldRecord);
+//     Serial.println("JSON shouldRecord type: ");
+//   //  Serial.println(doc["shouldRecord"].is<bool>());
+//   //  Serial.println(doc["shouldRecord"].is<const char*>());
+//     handleRoot();
+//   }
 
   // void handleNotFound() {
   //   String message = "File Not Found\n\n";
