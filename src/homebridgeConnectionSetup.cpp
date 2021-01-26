@@ -57,11 +57,13 @@ void handleUnRegister() {
   deleteConfigFile();
   delay(500);
   Serial.println("Resetting mDNS server...");
-  MDNS = MDNSResponder();
+  server.send(200, "text/plain", "Successfully unregistered!\r\n"); // naughty liar, hehe
   delay(500);
-  initMDNS();
-
-  Serial.println("De-registration successful!");
-  server.send(200, "text/plain", "Successfully unregistered!\r\n");
+  ESP.reset();
+//  MDNS = MDNSResponder();
+//  delay(500);
+//  initMDNS();
+//
+//  Serial.println("De-registration successful!");
 //  SPIFFS.end();
 }
