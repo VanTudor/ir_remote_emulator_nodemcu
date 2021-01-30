@@ -19,18 +19,18 @@
 #include <ESP8266mDNS.h>
 
 // #include "routes.cpp"
+#include "utils.hpp"
 #include "routes.hpp"
 #include "initialSetup.hpp"
 #include "server.hpp"
 #include "homebridgeConnectionSetup.hpp"
 #include "configManager.hpp"
+#include "irScanner.hpp"
 
 // // an IR detector/demodulator is connected to GPIO pin 2
 // uint16_t RECV_PIN = 2;
 // HTTPClient http;
 // IRrecv irrecv(RECV_PIN);
-
-// decode_results results;
 
 // const char* ssid = "DIGI-vmG5";
 // const char* password = "poiasd03";
@@ -41,7 +41,6 @@
 // #include <WiFiManager.h>
 
 //extern server(80);
-
  void handleRoot() {
    server.send(200, "text/plain", "hello from esp8266!\r\n");
  }
@@ -59,16 +58,32 @@
    }
    server.send(404, "text/plain", message);
  }
+
+
+// an IR detector/demodulator is connected to GPIO pin 2
+uint16_t RECV_PIN = 2;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
 void setup(void) {
   // runNewBoardSetup();
+  Serial.println("Starting.");
   Serial.begin(115200);
   SPIFFS.begin();
+  irrecv.enableIRIn();  // Start the receiver
+  Serial.println("Enabled Serial communication, SPIFFS and the IR scanner.");
   delay(200);
   initSSIDConnectionOrSetup();
   server.begin();
 
-  // server.on("/ir", HTTP_POST, handleIr);
-  server.on("/status", HTTP_POST, handleUpdateStatus);
+//  RuntimeConfig storedConfig{}; // TODO: make this global
+//  loadConfig(storedConfig);
+//  startIRCodeSocketStream(&storedConfig);
+
+  AppState appState;
+  RouteHandlers routeHandlers(appState);
+  server.on("/ir", HTTP_POST, std::bind(&RouteHandlers::handleIr, routeHandlers));
+  server.on("/status", HTTP_POST, std::bind(&RouteHandlers::handleUpdateStatus, routeHandlers));
 //  // server.on("/status", HTTP_GET, handleStatus);
 //
 //  // server.on("/inline", [](){
@@ -89,64 +104,13 @@ void setup(void) {
 
   server.on("/register", handleRegister);
   server.on("/unregister", handleUnRegister);
-  server.on("/reset", handleReset);
+  server.on("/reset", std::bind(&RouteHandlers::handleReset, routeHandlers));
   server.on("/deleteConfig", deleteConfigFile);
   server.on("/", [](){
     server.send(200, "text/plain", "this works as well");
   });
   server.onNotFound(handleNotFound);
 
-// void dump(decode_results *results) {
-//   // Dumps out the decode_results structure.
-//   // Call this after IRrecv::decode()
-//   uint16_t count = results->rawlen;
-//   if (results->decode_type == UNKNOWN) {
-//     Serial.print("Unknown encoding: ");
-//   } else if (results->decode_type == NEC) {
-//     Serial.print("Decoded NEC: ");
-//   } else if (results->decode_type == SONY) {
-//     Serial.print("Decoded SONY: ");
-//   } else if (results->decode_type == RC5) {
-//     Serial.print("Decoded RC5: ");
-//   } else if (results->decode_type == RC5X) {
-//     Serial.print("Decoded RC5X: ");
-//   } else if (results->decode_type == RC6) {
-//     Serial.print("Decoded RC6: ");
-//   } else if (results->decode_type == RCMM) {
-//     Serial.print("Decoded RCMM: ");
-//   } else if (results->decode_type == PANASONIC) {
-//     Serial.print("Decoded PANASONIC - Address: ");
-//     Serial.print(results->address, HEX);
-//     Serial.print(" Value: ");
-//   } else if (results->decode_type == LG) {
-//     Serial.print("Decoded LG: ");
-//   } else if (results->decode_type == JVC) {
-//     Serial.print("Decoded JVC: ");
-//   } else if (results->decode_type == AIWA_RC_T501) {
-//     Serial.print("Decoded AIWA RC T501: ");
-//   } else if (results->decode_type == WHYNTER) {
-//     Serial.print("Decoded Whynter: ");
-//   }
-//   serialPrintUint64(results->value, 16);
-//   Serial.print(" (");
-//   Serial.print(results->bits, DEC);
-//   Serial.println(" bits)");
-//   Serial.print("Raw (");
-//   Serial.print(count, DEC);
-//   Serial.print("): ");
-
-//   for (uint16_t i = 1; i < count; i++) {
-//     if (i % 100 == 0)
-//       yield();  // Preemptive yield every 100th entry to feed the WDT.
-//     if (i & 1) {
-//       Serial.print(results->rawbuf[i] * RAWTICK, DEC);
-//     } else {
-//       Serial.write('-');
-//       Serial.print((uint32_t) results->rawbuf[i] * RAWTICK, DEC);
-//     }
-//     Serial.print(" ");
-//   }
-//   Serial.println();
  }
 
 // void sendIrCodeToDB(uint64_t value) {
@@ -174,6 +138,11 @@ void loop(void) {
   // }
    server.handleClient();
    handleSocketIOLoop();
+    if (irrecv.decode(&results)) {
+      serialPrintUint64(results.value, 16);
+      recordIr(&results);
+      irrecv.resume();  // Receive the next value
+    }
 //  Serial.println(beServerName);
 //  Serial.println("LOCALIP: ");
 //  Serial.println(WiFi.localIP());

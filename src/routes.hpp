@@ -1,12 +1,13 @@
 #include <ESP8266HTTPClient.h>
-// #include <IRrecv.h>
-// #include <IRutils.h>
+ #include <IRrecv.h>
+ #include <IRutils.h>
 // #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 //#include <ESP8266mDNS.h>
 #include "server.hpp"
+#include "utils.hpp"
 // #include <IRremoteESP8266.h>
-// #include <IRsend.h>
+#include <IRsend.h>
 // #include <WiFiClient.h>
 #ifndef IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H
 #define IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H
@@ -14,14 +15,21 @@
 #include "configManager.hpp"
 void handleStatus();
 
-
-void handleIr();
-void handleNotFound();
-void blinkLED();
-void handleReset();
-// POST /status
-void handleUpdateStatus();
-void handleSocketIOLoop();
+class RouteHandlers { // see PIMPL
+  public:
+    RouteHandlers(AppState &appState);
+    void handleIr();
+    void handleNotFound();
+    void blinkLED();
+    void handleReset();
+    void send200Response(char*);
+  // POST /status
+    void handleUpdateStatus();
+    void handleSocketIOLoop();
+//    ~Handlers();
+  private:
+    AppState* appState;
+};
 
 #endif IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H
 

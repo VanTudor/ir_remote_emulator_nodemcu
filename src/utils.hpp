@@ -29,4 +29,8 @@ unsigned int getIntAsArraySize(int x);
 //  return x.isNull() ? dfault : x.as<T>();
 //}
 
+struct AppState {
+  boolean shouldRecordIr = false;
+};
+
 #endif //IR_REMOTE_EMULATOR_NODEMCU_UTILS_HPP

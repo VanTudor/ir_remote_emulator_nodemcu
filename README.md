@@ -14,5 +14,10 @@
 3. `esptool.py erase_flash`
 4. repeat.
 
+### Wiring diagram
+#### IR sensor
+- I'm using a Vishay TSOP24 family IR sensor (https://www.vishay.com/docs/82459/tsop48.pdf).
+The sensor's pins are (left to right, facing of the sensor) 1 OUT, 2 Vs (3.3V works), 3 GND
+  - The code expects the output of the sensor to go to pin D4 (aka 2 in code)
 ## Dependencies
 - https://github.com/tzapu/WiFiManager
