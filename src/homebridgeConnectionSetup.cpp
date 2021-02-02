@@ -18,13 +18,13 @@ void handleRegister() {
 //
 //  Serial.println();
 //  Serial.println("Reading from supplied JSON.");
-  DynamicJsonDocument doc(256);
+  StaticJsonDocument<256> doc;
   doc.clear();
   doc.to<JsonObject>();
   // TODO: add a try catch here.
-  Serial.println("----");
+  Serial.println("----Registering----");
+  Serial.println("Raw JSON received:");
   Serial.println(server.arg("plain"));
-  Serial.println("----");
   deserializeJson(doc, server.arg("plain"));
 
   Serial.println("----");
@@ -52,6 +52,7 @@ void handleRegister() {
   Serial.println("Restarting mDNS service...");
   server.send(200, "text/plain", "Updated registration!\r\n");
   delay(1000);
+  Serial.println("----Finished registering----");
   ESP.restart(); // do this instead of initMDNS(), to avoid passing the config from main.cpp down to this handler.
   delay(1000);
 }

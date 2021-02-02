@@ -32,11 +32,11 @@ class RuntimeConfig {
   public:
     static const RuntimeConfigDefaults defaults;
     bool registered;
-    char name[32];
+    char name[40];
   char backendServerPath[128]; // TODO: find a better name
   long backendServerPort; // TODO: find a better name
   bool shouldRecord;
-  char id[32]; // RCE's DB id, issued at registration
+  char id[40]; // RCE's DB id, issued at registration
 };
 
 void saveConfig(RuntimeConfig &config);
