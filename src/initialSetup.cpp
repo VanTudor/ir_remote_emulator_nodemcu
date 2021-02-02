@@ -6,7 +6,6 @@
 #include <cstdio>
 
 #include "initialSetup.hpp"
-#include "configManager.hpp"
 #include "server.hpp"
 //char beServerName[40];
 
@@ -19,7 +18,7 @@ void serviceProbeResult(const String& p_pcServiceName,
   Serial.printf("MDNSServiceProbeResultCallback: Service %s probe %s\n", p_pcServiceName.c_str(), (p_bProbeResult ? "succeeded." : "failed!"));
 }
 
-void initMDNS() {
+void initMDNS(RuntimeConfig runtimeConfig) {
   MDNSResponder::hMDNSService hMDNSService;
   MDNS.end();
   MDNS = MDNSResponder();
@@ -34,27 +33,26 @@ void initMDNS() {
   const char* mDNSTXTRegistered;
   Serial.println();
   Serial.println("Initiating mDNS service.");
-  RuntimeConfig storedConfig{};
 
   String mdnsHost = "remoteEmulator" + String(chipId);
   if (MDNS.begin(mdnsHost, WiFi.localIP())) {
     Serial.println("MDNS responder started");
   }
-  loadConfig(storedConfig);
   char storedConfigDbId[50];
-  strcpy(storedConfigDbId, storedConfig.id);
-  const char* storedConfigName = storedConfig.name;
+  strcpy(storedConfigDbId, runtimeConfig.id);
+  const char* runtimeConfigName = runtimeConfig.name;
 
-  mDNSTXTRegistered = storedConfig.registered ? "true" : "false";
+  mDNSTXTRegistered = runtimeConfig.registered ? "true" : "false";
   Serial.println();
   Serial.println("Finished loading config. Config data:");
-  Serial.println("REGISTERED: >" + String(storedConfig.registered));
-  Serial.println("NAME: >" + String(storedConfig.name));
-  Serial.println(storedConfig.id);
-  Serial.println(storedConfigDbId);
+  Serial.println("REGISTERED: >" + String(runtimeConfig.registered));
+  Serial.println("NAME: >" + String(runtimeConfig.name));
+  Serial.println("DB ID: >" + String(storedConfigDbId));
+  Serial.println("backendServerPort: >" + String(runtimeConfig.backendServerPort));
+  Serial.println("backendServerPath: >" + String(runtimeConfig.backendServerPath));
 //  Serial.println("ID: >" + String(storedConfig.));
   Serial.println("Registering mDNS service...");
-  hMDNSService = MDNS.addService(storedConfigName, "_http", "tcp", mDNSPort);
+  hMDNSService = MDNS.addService(runtimeConfigName, "_http", "tcp", mDNSPort);
   if (hMDNSService) {
 //    MDNS.setServiceProbeResultCallback(hMDNSService, serviceProbeResult);
     MDNS.addServiceTxt(hMDNSService, "type", mDNSTXTServiceType);
@@ -75,11 +73,11 @@ void initMDNS() {
   } else {
     Serial.println("Failed starting MDNS host. Retrying in 500ms.");
     delay(500);
-    initMDNS();
+    initMDNS(runtimeConfig);
   }
 }
 
-void initSSIDConnectionOrSetup() {
+void initSSIDConnectionOrSetup(RuntimeConfig runtimeConfig) {
   WiFiManager wifiManager;
   // Wait 180 seconds after a WiFi connection failure before re-entering new board setup mode
   wifiManager.setConfigPortalTimeout(180);
@@ -90,7 +88,7 @@ void initSSIDConnectionOrSetup() {
   if(!wifiManager.autoConnect(charBuf, ServerConfig::apPassword)) {
     Serial.println("WiFi hotspot init failed. Resetting...");
     delay(3000);
-    ESP.reset();
+    ESP.restart();
     delay(5000);
   }
   Serial.println();
@@ -99,5 +97,5 @@ void initSSIDConnectionOrSetup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  initMDNS();
+  initMDNS(runtimeConfig);
 }

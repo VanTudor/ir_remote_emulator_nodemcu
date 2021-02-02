@@ -18,7 +18,7 @@ void handleRegister() {
 //
 //  Serial.println();
 //  Serial.println("Reading from supplied JSON.");
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(256);
   doc.clear();
   doc.to<JsonObject>();
   // TODO: add a try catch here.
@@ -34,10 +34,13 @@ void handleRegister() {
   Serial.println(doc["mazga_in_beci"].isNull());
   Serial.println("----");
   config.registered = doc["registered"].isNull() ? RuntimeConfig::defaults.registered : doc["registered"];
-  config.name = doc["name"].isNull() ? RuntimeConfig::defaults.name : doc["name"];
-  config.backendServerPath = doc["backendServerPath"].isNull() ? RuntimeConfig::defaults.backendServerPath : doc["backendServerPath"]; // TODO: add error handling
+//  config.name = doc["name"].isNull() ? RuntimeConfig::defaults.name : doc["name"];
+  strlcpy(config.name, doc["name"] | RuntimeConfig::defaults.name, sizeof(config.name));
+//  config.backendServerPath = doc["backendServerPath"].isNull() ? RuntimeConfig::defaults.backendServerPath : doc["backendServerPath"]; // TODO: add error handling
+  strlcpy(config.backendServerPath, doc["backendServerPath"] | RuntimeConfig::defaults.backendServerPath, sizeof(config.backendServerPath));
   config.backendServerPort = doc["backendServerPort"].isNull() ? RuntimeConfig::defaults.backendServerPort : doc["backendServerPort"]; // TODO: add error handling
-  config.id = doc["id"]; // TODO: add error handling
+  strlcpy(config.id, doc["id"] | RuntimeConfig::defaults.id, sizeof(config.id));
+//  config.id = doc["id"]; // TODO: add error handling
 
   Serial.println("Deserialized JSON. Values: ");
   Serial.println("Registered: " + String(config.registered));
@@ -47,8 +50,10 @@ void handleRegister() {
 
   saveConfig(config);
   Serial.println("Restarting mDNS service...");
-  initMDNS();
   server.send(200, "text/plain", "Updated registration!\r\n");
+  delay(1000);
+  ESP.restart(); // do this instead of initMDNS(), to avoid passing the config from main.cpp down to this handler.
+  delay(1000);
 }
 
 void handleUnRegister() {
@@ -59,7 +64,7 @@ void handleUnRegister() {
   Serial.println("Resetting mDNS server...");
   server.send(200, "text/plain", "Successfully unregistered!\r\n"); // naughty liar, hehe
   delay(500);
-  ESP.reset();
+  ESP.restart();
 //  MDNS = MDNSResponder();
 //  delay(500);
 //  initMDNS();

@@ -66,14 +66,28 @@ IRrecv irrecv(RECV_PIN);
 decode_results results;
 
 void setup(void) {
+  RuntimeConfig storedConfig{};
   // runNewBoardSetup();
-  Serial.println("Starting.");
   Serial.begin(115200);
-  SPIFFS.begin();
-  irrecv.enableIRIn();  // Start the receiver
+  delay(2000);
+  Serial.println("Starting.");
+  if (!SPIFFS.begin()) {
+    Serial.println("Failed initing spiffs.");
+  }
+//  irrecv.enableIRIn();  // Start the receiver
   Serial.println("Enabled Serial communication, SPIFFS and the IR scanner.");
+  Serial.println("Loading stored config.");
+  loadConfig(storedConfig);
+  delay(5000);
+  Serial.println("Stored config config loaded.");
+  Serial.println("Initializing SSID connection or setup.");
+  initSSIDConnectionOrSetup(storedConfig);
   delay(200);
-  initSSIDConnectionOrSetup();
+  Serial.println("SSID connection or setup finished.");
+  Serial.println("Starting SocketIO client.");
+//  startIRCodeSocketStream(storedConfig);
+  delay(200);
+  Serial.println("SocketIO client started.");
   server.begin();
 
 //  RuntimeConfig storedConfig{}; // TODO: make this global
@@ -82,8 +96,8 @@ void setup(void) {
 
   AppState appState;
   RouteHandlers routeHandlers(appState);
-  server.on("/ir", HTTP_POST, std::bind(&RouteHandlers::handleIr, routeHandlers));
-  server.on("/status", HTTP_POST, std::bind(&RouteHandlers::handleUpdateStatus, routeHandlers));
+//  server.on("/ir", HTTP_POST, std::bind(&RouteHandlers::handleIr, routeHandlers));
+//  server.on("/status", HTTP_POST, std::bind(&RouteHandlers::handleUpdateStatus, routeHandlers));
 //  // server.on("/status", HTTP_GET, handleStatus);
 //
 //  // server.on("/inline", [](){
@@ -111,6 +125,7 @@ void setup(void) {
   });
   server.onNotFound(handleNotFound);
 
+  Serial.println("Startup setup done.");
  }
 
 // void sendIrCodeToDB(uint64_t value) {
@@ -137,12 +152,16 @@ void loop(void) {
   //       }
   // }
    server.handleClient();
-   handleSocketIOLoop();
-    if (irrecv.decode(&results)) {
-      serialPrintUint64(results.value, 16);
-      recordIr(&results);
-      irrecv.resume();  // Receive the next value
-    }
+//  char stringifiedIRCode[64];
+//    if (irrecv.decode(&results)) {
+//      Serial.println("Detected IR value: ");
+//      serialPrintUint64(results.value, 16);
+////      recordIr(&results);
+//
+//      sprintf(stringifiedIRCode, "%llu", results.value);
+//      irrecv.resume();  // Receive the next value
+////      handleSocketIOLoop(stringifiedIRCode, storedConfig);
+//    }
 //  Serial.println(beServerName);
 //  Serial.println("LOCALIP: ");
 //  Serial.println(WiFi.localIP());

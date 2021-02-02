@@ -47,9 +47,11 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
   }
 }
 
-void startIRCodeSocketStream(RuntimeConfig* storedConfig) {
+void startIRCodeSocketStream(RuntimeConfig storedConfig) {
+  Serial.println("Starting socket stream on" + String(storedConfig.backendServerPath) + String(storedConfig.backendServerPort));
   //   socketIO.begin(storedConfig.backendServerPath, storedConfig.backendServerPort);
-  socketIO.begin(storedConfig->backendServerPath, storedConfig->backendServerPort);
+  socketIO.begin(storedConfig.backendServerPath, storedConfig.backendServerPort);
+  delay(200);
   // event handler
   socketIO.onEvent(socketIOEvent);
 }
@@ -58,7 +60,7 @@ void startIRCodeSocketStream(RuntimeConfig* storedConfig) {
 //  socketIO.disconnect();
 //}
 
-void handleSocketIOLoop() {
+void handleSocketIOLoop(char* irCode, RuntimeConfig runtimeConfig) {
   if (socketIO.isConnected()) {
     socketIO.loop();
 
@@ -73,26 +75,29 @@ void handleSocketIOLoop() {
 
       // add evnet name
       // Hint: socket.on('event_name', ....
-      array.add("event_name");
+      array.add("RCE_IRCodeDetected");
 
       // add payload (parameters) for the event
       JsonObject param1 = array.createNestedObject();
-      param1["now"] = (uint32_t) now;
-
+      param1["RCEId"] = runtimeConfig.id;
+      param1["IRCode"] = irCode;
       // JSON to String (serializion)
       String output;
       serializeJson(doc, output);
 
       // Send event
       socketIO.sendEVENT(output);
+      Serial.println("Sent SocketIO message.");
 
       // Print JSON for debugging
       USE_SERIAL.println(output);
     }
+  } else {
+    Serial.println("SocketIO not connected. Sending detected IR message failed.");
   }
 }
 
-void recordIr(decode_results *results) {
+void detectIr(decode_results *results) {
   // Dumps out the decode_results structure.
   // Call this after IRrecv::decode()
   uint16_t count = results->rawlen;

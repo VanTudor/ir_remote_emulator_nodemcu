@@ -9,7 +9,7 @@ void RouteHandlers::handleReset() {
   Serial.println("Resetting...");
   WiFi.disconnect();
   Serial.println("Disconnecting from WiFi...");
-  ESP.reset();
+  ESP.restart();
   Serial.println("Erasing stored config...");
   delay(1000);
   Serial.println("Successfully reset!");
@@ -29,7 +29,7 @@ void RouteHandlers::handleUpdateStatus() {
   saveConfig(storedConfig);
 
   if (shouldRecordIr) {
-    startIRCodeSocketStream(&storedConfig);
+    startIRCodeSocketStream(storedConfig);
   } else {
 //    stopIRCodeSocketStream();
   }

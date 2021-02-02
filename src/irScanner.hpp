@@ -15,8 +15,8 @@
 #include "configManager.hpp"
 
 void socketIOEvent(socketIOmessageType_t, uint8_t *, size_t);
-void startIRCodeSocketStream(RuntimeConfig *storedConfig);
-void handleSocketIOLoop();
+void startIRCodeSocketStream(RuntimeConfig);
+void handleSocketIOLoop(char*, RuntimeConfig);
 void recordIr(decode_results *results);
 #endif //IR_REMOTE_EMULATOR_NODEMCU_IRDETECTION_HPP
 
