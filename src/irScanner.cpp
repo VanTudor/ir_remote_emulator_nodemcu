@@ -5,8 +5,6 @@
 
 SocketIOclient socketIO;
 
-#define USE_SERIAL Serial1
-
 void handleGetStatus() {
   StaticJsonDocument<200> doc;
   String JSONResponse;
@@ -20,49 +18,54 @@ void handleGetStatus() {
 void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case sIOtype_DISCONNECT:
-      USE_SERIAL.printf("[IOc] Disconnected!\n");
+      Serial.printf("[IOc] Disconnected!\n");
       break;
     case sIOtype_CONNECT:
-      USE_SERIAL.printf("[IOc] Connected to url: %s\n", payload);
+      Serial.printf("[IOc] Connected to url: %s\n", payload);
       break;
     case sIOtype_EVENT:
-      USE_SERIAL.printf("[IOc] get event: %s\n", payload);
+      Serial.printf("[IOc] get event: %s\n", payload);
       break;
     case sIOtype_ACK:
-      USE_SERIAL.printf("[IOc] get ack: %u\n", length);
+      Serial.printf("[IOc] get ack: %u\n", length);
       hexdump(payload, length);
       break;
     case sIOtype_ERROR:
-      USE_SERIAL.printf("[IOc] get error: %u\n", length);
+      Serial.printf("[IOc] get error: %u\n", length);
       hexdump(payload, length);
       break;
     case sIOtype_BINARY_EVENT:
-      USE_SERIAL.printf("[IOc] get binary: %u\n", length);
+      Serial.printf("[IOc] get binary: %u\n", length);
       hexdump(payload, length);
       break;
     case sIOtype_BINARY_ACK:
-      USE_SERIAL.printf("[IOc] get binary ack: %u\n", length);
+      Serial.printf("[IOc] get binary ack: %u\n", length);
       hexdump(payload, length);
       break;
   }
 }
 
 void startIRCodeSocketStream(RuntimeConfig storedConfig) {
-  Serial.println("Starting socket stream on" + String(storedConfig.backendServerPath) + String(storedConfig.backendServerPort));
-  //   socketIO.begin(storedConfig.backendServerPath, storedConfig.backendServerPort);
-  socketIO.begin(storedConfig.backendServerPath, storedConfig.backendServerPort);
+  String wsConnectPath = "ws://" + String(storedConfig.backendServerPath);
+  Serial.println("Starting websocket connection to " + wsConnectPath + String(storedConfig.backendWSPort)); // + String(storedConfig.backendServerPath) + '3000' + String(storedConfig.backendWSPort));
+  //   socketIO.begin(storedConfig.backendServerPath, storedConfig.backendWSPort);
+  socketIO.begin("ws://" + String(storedConfig.backendServerPath), storedConfig.backendWSPort);;
   delay(200);
   // event handler
   socketIO.onEvent(socketIOEvent);
+  socketIO.sendEVENT("sloboz");
 }
 
 //void stopIRCodeSocketStream() {
 //  socketIO.disconnect();
 //}
 
-void handleSocketIOLoop(char* irCode, RuntimeConfig runtimeConfig) {
+void handleSocketIOLoop() {
+  socketIO.loop();
+}
+void emitIROnSocketIO(char* irCode, RuntimeConfig runtimeConfig) {
   if (socketIO.isConnected()) {
-    socketIO.loop();
+//    socketIO.loop();
 
     uint64_t now = millis();
     unsigned long messageTimestamp = 0;
@@ -73,7 +76,7 @@ void handleSocketIOLoop(char* irCode, RuntimeConfig runtimeConfig) {
       DynamicJsonDocument doc(1024);
       JsonArray array = doc.to<JsonArray>();
 
-      // add evnet name
+      // add evemt name
       // Hint: socket.on('event_name', ....
       array.add("RCE_IRCodeDetected");
 
@@ -90,7 +93,7 @@ void handleSocketIOLoop(char* irCode, RuntimeConfig runtimeConfig) {
       Serial.println("Sent SocketIO message.");
 
       // Print JSON for debugging
-      USE_SERIAL.println(output);
+      Serial.println(output);
     }
   } else {
     Serial.println("SocketIO not connected. Sending detected IR message failed.");

@@ -16,7 +16,8 @@
 
 void socketIOEvent(socketIOmessageType_t, uint8_t *, size_t);
 void startIRCodeSocketStream(RuntimeConfig);
-void handleSocketIOLoop(char*, RuntimeConfig);
+void emitIROnSocketIO(char*, RuntimeConfig);
+void handleSocketIOLoop();
 void recordIr(decode_results *results);
 #endif //IR_REMOTE_EMULATOR_NODEMCU_IRDETECTION_HPP
 

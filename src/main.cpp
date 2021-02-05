@@ -14,9 +14,28 @@
 *   * ESP-01 modules are tricky. We suggest you use a module with more GPIOs
 *     for your first time. e.g. ESP-12 etc.
 */
+#ifndef NODEBUG_WEBSOCKETS
+#ifdef DEBUG_ESP_PORT
+#define DEBUG_WEBSOCKETS(...)               \
+    {                                       \
+        DEBUG_ESP_PORT.printf(__VA_ARGS__); \
+        DEBUG_ESP_PORT.flush();             \
+    }
+#else
+//#define DEBUG_WEBSOCKETS(...) os_printf( __VA_ARGS__ )
+#endif
+#endif
 
+#ifndef DEBUG_WEBSOCKETS
+#define DEBUG_WEBSOCKETS(...)
+#ifndef NODEBUG_WEBSOCKETS
+#define NODEBUG_WEBSOCKETS
+#endif
+#endif
 #include <Arduino.h>
 #include <ESP8266mDNS.h>
+#include <WebSocketsClient.h>
+#include <SocketIOclient.h>
 
 // #include "routes.cpp"
 #include "utils.hpp"
@@ -64,30 +83,33 @@
 uint16_t RECV_PIN = 2;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
+RuntimeConfig storedConfig{};
 
 void setup(void) {
-  RuntimeConfig storedConfig{};
   // runNewBoardSetup();
   Serial.begin(115200);
+  Serial.setDebugOutput(true);
   delay(2000);
   Serial.println("Starting.");
   if (!SPIFFS.begin()) {
     Serial.println("Failed initing spiffs.");
   }
-//  irrecv.enableIRIn();  // Start the receiver
+  irrecv.enableIRIn();  // Start the receiver
   Serial.println("Enabled Serial communication, SPIFFS and the IR scanner.");
   Serial.println("Loading stored config.");
   loadConfig(storedConfig);
-  delay(5000);
+  delay(2000);
   Serial.println("Stored config config loaded.");
   Serial.println("Initializing SSID connection or setup.");
   initSSIDConnectionOrSetup(storedConfig);
   delay(200);
   Serial.println("SSID connection or setup finished.");
-  Serial.println("Starting SocketIO client.");
-//  startIRCodeSocketStream(storedConfig);
-  delay(200);
-  Serial.println("SocketIO client started.");
+  if (storedConfig.registered) {
+    Serial.println("Starting SocketIO client.");
+    startIRCodeSocketStream(storedConfig);
+    delay(200);
+    Serial.println("SocketIO client started.");
+  }
   server.begin();
 
 //  RuntimeConfig storedConfig{}; // TODO: make this global
@@ -151,17 +173,24 @@ void loop(void) {
   //         irrecv.resume();  // Receive the next value
   //       }
   // }
-   server.handleClient();
-//  char stringifiedIRCode[64];
-//    if (irrecv.decode(&results)) {
-//      Serial.println("Detected IR value: ");
-//      serialPrintUint64(results.value, 16);
-////      recordIr(&results);
-//
-//      sprintf(stringifiedIRCode, "%llu", results.value);
-//      irrecv.resume();  // Receive the next value
-////      handleSocketIOLoop(stringifiedIRCode, storedConfig);
-//    }
+//  Serial.println(storedConfig.registered);
+  if (storedConfig.registered) {
+//    Serial.println("LOOP: value in stored config is true-y.");
+    handleSocketIOLoop();
+  }
+  server.handleClient();
+  char stringifiedIRCode[64];
+  if (irrecv.decode(&results)) {
+    Serial.println("Detected IR value: ");
+    serialPrintUint64(results.value, 16);
+//      recordIr(&results);
+
+    sprintf(stringifiedIRCode, "%llu", results.value);
+    irrecv.resume();  // Receive the next value
+    if (storedConfig.registered) {
+      emitIROnSocketIO(stringifiedIRCode, storedConfig);
+    }
+  }
 //  Serial.println(beServerName);
 //  Serial.println("LOCALIP: ");
 //  Serial.println(WiFi.localIP());

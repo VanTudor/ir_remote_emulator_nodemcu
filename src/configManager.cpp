@@ -76,20 +76,23 @@ void loadConfig(RuntimeConfig &config) {
   Serial.println("Config.backendServerPath loaded value: ");
   Serial.println(config.backendServerPath);
 
-  Serial.println("loading backendServerPort");
-  Serial.println("backendServerPort.isNull: ");
-  Serial.println(doc["backendServerPort"].isNull());
-  long backendServerPort;
-  Serial.println("11111");
-  delay(100);
-  Serial.println(doc["backendServerPort"].as<String>());
-  char charBuff[50];
-  doc["backendServerPort"].as<String>().toCharArray(charBuff, 50);
-  backendServerPort = strtol(charBuff, nullptr, 10);
-  Serial.println("222222");
-  config.backendServerPort = doc["backendServerPort"].isNull() ? RuntimeConfig::defaults.backendServerPort : backendServerPort;
-  Serial.println("Config.backendServerPort loaded value: ");
-  Serial.println(config.backendServerPort);
+  Serial.println("loading backendHTTPPort");
+  Serial.println("backendHTTPPort.isNull: ");
+  Serial.println(doc["backendHTTPPort"].isNull());
+  long backendHTTPPort, backendWSPort;
+  Serial.println(doc["backendHTTPPort"].as<String>());
+  Serial.println(doc["backendWSPort"].as<String>());
+  char httpCharBuff[10], wsCharBuff[10];
+  doc["backendHTTPPort"].as<String>().toCharArray(httpCharBuff, 10);
+  backendHTTPPort = strtol(httpCharBuff, nullptr, 10);
+  doc["backendWSPort"].as<String>().toCharArray(wsCharBuff, 10);
+  backendWSPort = strtol(wsCharBuff, nullptr, 10);
+  config.backendHTTPPort = doc["backendHTTPPort"].isNull() ? RuntimeConfig::defaults.backendHTTPPort : backendHTTPPort;
+  config.backendWSPort = doc["backendWSPort"].isNull() ? RuntimeConfig::defaults.backendWSPort : backendWSPort;
+  Serial.println("Config.backendHTTPPort loaded value: ");
+  Serial.println(config.backendHTTPPort);
+  Serial.println("Config.backendWSPort loaded value: ");
+  Serial.println(config.backendWSPort);
 
   Serial.println("loading DB issued id");
   Serial.println("loading id");
@@ -127,12 +130,14 @@ void saveConfig(RuntimeConfig &config) {
   doc["registered"] = config.registered;
   doc["name"] = config.name;
   doc["id"] = config.id;
-  doc["backendServerPort"] = config.backendServerPort;
+  doc["backendHTTPPort"] = config.backendHTTPPort;
+  doc["backendWSPort"] = config.backendWSPort;
   doc["backendServerPath"] = config.backendServerPath;
   Serial.println("name  " + doc["name"].as<String>());
   Serial.println("registered  " + doc["registered"].as<String>());
   Serial.println("backendServerPath  " + doc["backendServerPath"].as<String>());
-  Serial.println("backendServerPort  " + doc["backendServerPort"].as<String>());
+  Serial.println("backendHTTPPort  " + doc["backendHTTPPort"].as<String>());
+  Serial.println("backendWSPort  " + doc["backendWSPort"].as<String>());
   Serial.println("id  " + doc["id"].as<String>());
 
   Serial.println("Added data to json.");

@@ -21,7 +21,8 @@ struct RuntimeConfigDefaults {
   const char* name = "no name yet";
   const bool registered = false;
   const char* backendServerPath = ""; // TODO: find a better name
-  const long backendServerPort = 3000; // TODO: find a better name
+  const long backendHTTPPort = 3001; // TODO: find a better name
+  const long backendWSPort = 3002; // TODO: find a better name
   const bool shouldRecord = false;
   const char* id = "no id yet";
 };
@@ -34,7 +35,8 @@ class RuntimeConfig {
     bool registered;
     char name[40];
   char backendServerPath[128]; // TODO: find a better name
-  long backendServerPort; // TODO: find a better name
+  long backendHTTPPort; // TODO: find a better name
+  long backendWSPort; // TODO: find a better name
   bool shouldRecord;
   char id[40]; // RCE's DB id, issued at registration
 };

@@ -38,7 +38,9 @@ void handleRegister() {
   strlcpy(config.name, doc["name"] | RuntimeConfig::defaults.name, sizeof(config.name));
 //  config.backendServerPath = doc["backendServerPath"].isNull() ? RuntimeConfig::defaults.backendServerPath : doc["backendServerPath"]; // TODO: add error handling
   strlcpy(config.backendServerPath, doc["backendServerPath"] | RuntimeConfig::defaults.backendServerPath, sizeof(config.backendServerPath));
-  config.backendServerPort = doc["backendServerPort"].isNull() ? RuntimeConfig::defaults.backendServerPort : doc["backendServerPort"]; // TODO: add error handling
+  config.backendHTTPPort = doc["backendHTTPPort"].isNull() ? RuntimeConfig::defaults.backendHTTPPort : doc["backendHTTPPort"]; // TODO: add error handling
+  config.backendWSPort = doc["backendWSPort"].isNull() ? RuntimeConfig::defaults.backendWSPort : doc["backendWSPort"]; // TODO: add error handling
+
   strlcpy(config.id, doc["id"] | RuntimeConfig::defaults.id, sizeof(config.id));
 //  config.id = doc["id"]; // TODO: add error handling
 

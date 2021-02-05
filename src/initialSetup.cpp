@@ -2,9 +2,6 @@
 
 // // #include <DNSServer.h>            //Local DNS Server used for redirecting all requests to the configuration portal
 // // #include <ESP8266WebServer.h>     //Local WebServer used to serve the configuration portal
-
-#include <cstdio>
-
 #include "initialSetup.hpp"
 #include "server.hpp"
 //char beServerName[40];
@@ -19,10 +16,12 @@ void serviceProbeResult(const String& p_pcServiceName,
 }
 
 void initMDNS(RuntimeConfig runtimeConfig) {
-  MDNSResponder::hMDNSService hMDNSService;
+  MDNSResponder::hMDNSService httpMDNSService;
+//  MDNSResponder::hMDNSService wsMDNSService;
   MDNS.end();
   MDNS = MDNSResponder();
   short mDNSPort = 80;
+//  short wsPort = 81;
 
   const char* mDNSTXTServiceType = "esp8266RemoteEmulator";
   const int chipId = ESP.getChipId();
@@ -48,19 +47,20 @@ void initMDNS(RuntimeConfig runtimeConfig) {
   Serial.println("REGISTERED: >" + String(runtimeConfig.registered));
   Serial.println("NAME: >" + String(runtimeConfig.name));
   Serial.println("DB ID: >" + String(storedConfigDbId));
-  Serial.println("backendServerPort: >" + String(runtimeConfig.backendServerPort));
+  Serial.println("backendHTTPPort: >" + String(runtimeConfig.backendHTTPPort));
   Serial.println("backendServerPath: >" + String(runtimeConfig.backendServerPath));
 //  Serial.println("ID: >" + String(storedConfig.));
   Serial.println("Registering mDNS service...");
-  hMDNSService = MDNS.addService(runtimeConfigName, "_http", "tcp", mDNSPort);
-  if (hMDNSService) {
-//    MDNS.setServiceProbeResultCallback(hMDNSService, serviceProbeResult);
-    MDNS.addServiceTxt(hMDNSService, "type", mDNSTXTServiceType);
+  httpMDNSService = MDNS.addService(runtimeConfigName, "_http", "tcp", mDNSPort);
+//  wsMDNSService = MDNS.addService(runtimeConfigName, "_ws", "tcp", wsPort);
+  if (httpMDNSService) {
+//    MDNS.setServiceProbeResultCallback(httpMDNSService, serviceProbeResult);
+    MDNS.addServiceTxt(httpMDNSService, "type", mDNSTXTServiceType);
 //    MDNS.setServiceName(storedConfigName, "ESP8266 Remote Emulator");
-//    MDNS.setServiceName(hMDNSService, storedConfigName);
-    MDNS.addServiceTxt(hMDNSService, "id", storedConfigDbId);
-    MDNS.addServiceTxt(hMDNSService, "chipId", mDNSTXTChipId);
-    MDNS.addServiceTxt(hMDNSService, "registered", mDNSTXTRegistered);
+//    MDNS.setServiceName(httpMDNSService, storedConfigName);
+    MDNS.addServiceTxt(httpMDNSService, "id", storedConfigDbId);
+    MDNS.addServiceTxt(httpMDNSService, "chipId", mDNSTXTChipId);
+    MDNS.addServiceTxt(httpMDNSService, "registered", mDNSTXTRegistered);
 //    MDNS.addServiceTxt(hMDNSService, "id", storedConfig.id);
 
     Serial.println();

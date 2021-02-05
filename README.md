@@ -21,3 +21,8 @@ The sensor's pins are (left to right, facing of the sensor) 1 OUT, 2 Vs (3.3V wo
   - The code expects the output of the sensor to go to pin D4 (aka 2 in code)
 ## Dependencies
 - https://github.com/tzapu/WiFiManager
+
+### Debugging
+#### Platformio
+Go to Projects -> Your project -> New option `build_flags` and add `-DDEBUG_ESP_PORT=Serial` to the new input that appeared on the bottom of the page.
+ 
