@@ -17,7 +17,7 @@ void handleStatus();
 
 class RouteHandlers { // see PIMPL
   public:
-    RouteHandlers(AppState &appState);
+    RouteHandlers(AppState &appState, IRsend &externalIRSender);
     void handleIr();
     void handleNotFound();
     void blinkLED();
@@ -29,6 +29,7 @@ class RouteHandlers { // see PIMPL
 //    ~Handlers();
   private:
     AppState* appState;
+    IRsend* irsend;
 };
 
 #endif IR_REMOTE_EMULATOR_NODEMCU_ROUTES_H

@@ -1,8 +1,8 @@
 #include "routes.hpp"
-IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
 
-RouteHandlers::RouteHandlers(AppState &externalAppState) {
+RouteHandlers::RouteHandlers(AppState &externalAppState, IRsend &externalIRSender) {
   appState = &externalAppState;
+  irsend = &externalIRSender;
 }
 
 void RouteHandlers::handleReset() {
@@ -86,7 +86,7 @@ void RouteHandlers::handleIr() {
   appState->shouldRecordIr = shouldRecord;
   if (irCode) {
     uint32_t code = strtoul(irCode, NULL, 10);
-    irsend.sendNEC(code, 32);
+    irsend->sendNEC(code, 32);
   }
   // Output to serial monitor
   Serial.print("JSON irCode:");

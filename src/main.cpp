@@ -35,9 +35,7 @@
 #include <Arduino.h>
 #include <ESP8266mDNS.h>
 #include <WebSocketsClient.h>
-#include <SocketIOclient.h>
 
-// #include "routes.cpp"
 #include "utils.hpp"
 #include "routes.hpp"
 #include "initialSetup.hpp"
@@ -46,20 +44,6 @@
 #include "configManager.hpp"
 #include "irScanner.hpp"
 
-// // an IR detector/demodulator is connected to GPIO pin 2
-// uint16_t RECV_PIN = 2;
-// HTTPClient http;
-// IRrecv irrecv(RECV_PIN);
-
-// const char* ssid = "DIGI-vmG5";
-// const char* password = "poiasd03";
-
-// IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
-
-// //void generateStatus() {}
-// #include <WiFiManager.h>
-
-//extern server(80);
  void handleRoot() {
    server.send(200, "text/plain", "hello from esp8266!\r\n");
  }
@@ -78,12 +62,13 @@
    server.send(404, "text/plain", message);
  }
 
-
 // an IR detector/demodulator is connected to GPIO pin 2
 uint16_t RECV_PIN = 2;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 RuntimeConfig storedConfig{};
+
+IRsend irsend(12);  // An IR LED is controlled by GPIO pin  (D6)
 
 void setup(void) {
   // runNewBoardSetup();
@@ -117,8 +102,8 @@ void setup(void) {
 //  startIRCodeSocketStream(&storedConfig);
 
   AppState appState;
-  RouteHandlers routeHandlers(appState);
-//  server.on("/ir", HTTP_POST, std::bind(&RouteHandlers::handleIr, routeHandlers));
+  irsend.begin();
+  RouteHandlers routeHandlers(appState, irsend);
 //  server.on("/status", HTTP_POST, std::bind(&RouteHandlers::handleUpdateStatus, routeHandlers));
 //  // server.on("/status", HTTP_GET, handleStatus);
 //
@@ -128,7 +113,6 @@ void setup(void) {
 //
 //  // server.onNotFound(handleNotFound);
 //
-  // irsend.begin();
   // irrecv.enableIRIn();  // Start the receiver
 
    // Wait for connection
@@ -142,6 +126,9 @@ void setup(void) {
   server.on("/unregister", handleUnRegister);
   server.on("/reset", std::bind(&RouteHandlers::handleReset, routeHandlers));
   server.on("/deleteConfig", deleteConfigFile);
+
+//  server.on("/ir", HTTP_POST, handleIR);
+  server.on("/ir", HTTP_POST, std::bind(&RouteHandlers::handleIr, routeHandlers));
   server.on("/", [](){
     server.send(200, "text/plain", "this works as well");
   });
@@ -150,32 +137,10 @@ void setup(void) {
   Serial.println("Startup setup done.");
  }
 
-// void sendIrCodeToDB(uint64_t value) {
-//   http.begin("http://192.168.100.11:3001/createIrValue");
-//   http.addHeader("Content-Type", "application/json");
-//   int httpCode = http.POST("{\"value\":\"" + uint64ToString(value, 16) + "\"}");
-//   String payload = http.getString();
-//   Serial.println("Sent new value to server:");
-//   Serial.println(payload);
-//   http.end();
-// }
-
 void loop(void) {
-//  deleteConfigFile();
   MDNS.update();
-  //   if (shouldRecordIr) {
-  //       if (irrecv.decode(&results)) {
-  //         Serial.println("DETECTED IR VALUE:!");
-  //         serialPrintUint64(results.value, 16);
-  //         // dump(&results);
-  //         sendIrCodeToDB(results.value);
-  //         Serial.println('Sent request to mofocking mofock.');
-  //         irrecv.resume();  // Receive the next value
-  //       }
-  // }
-//  Serial.println(storedConfig.registered);
+
   if (storedConfig.registered) {
-//    Serial.println("LOOP: value in stored config is true-y.");
     handleSocketIOLoop();
   }
   server.handleClient();
@@ -183,7 +148,6 @@ void loop(void) {
   if (irrecv.decode(&results)) {
     Serial.println("Detected IR value: ");
     serialPrintUint64(results.value, 16);
-//      recordIr(&results);
 
     sprintf(stringifiedIRCode, "%llu", results.value);
     irrecv.resume();  // Receive the next value
@@ -191,9 +155,4 @@ void loop(void) {
       emitIROnSocketIO(stringifiedIRCode, storedConfig);
     }
   }
-//  Serial.println(beServerName);
-//  Serial.println("LOCALIP: ");
-//  Serial.println(WiFi.localIP());
-//  Serial.println("WIFI connected: ");
-//  Serial.println(WiFi.status() == WL_CONNECTED);
 }

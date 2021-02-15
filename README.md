@@ -22,6 +22,12 @@ The sensor's pins are (left to right, facing of the sensor) 1 OUT, 2 Vs (3.3V wo
 ## Dependencies
 - https://github.com/tzapu/WiFiManager
 
+#### IR emitter
+- IR LED: + (long leg) to 3V3
+- transistor (2N2222, facing the flat side): 
+    - right leg to GND
+    - middle leg to D6
+    - left leg to IR LED - (short leg)
 ### Debugging
 #### Platformio
 Go to Projects -> Your project -> New option `build_flags` and add `-DDEBUG_ESP_PORT=Serial` to the new input that appeared on the bottom of the page.
