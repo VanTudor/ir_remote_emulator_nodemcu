@@ -30,8 +30,8 @@
 
 // decode_results results;
 
-// const char* ssid = "DIGI-vmG5";
-// const char* password = "poiasd03";
+// const char* ssid = "";
+// const char* password = "";
 // bool shouldRecordIr = false;
 
 // IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
